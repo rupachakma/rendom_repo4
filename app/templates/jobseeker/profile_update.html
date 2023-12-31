@@ -1,0 +1,58 @@
+{% extends "../base.html" %}
+{% block content %}
+
+<div class="container">
+    <div class="mx-auto shadow bg-light">
+        <h2 class="mt-5 mb-4 text-center p-2">Update Jobseeker Profile</h2>
+        <hr>
+        <div class="p-5">
+            <form method="post" enctype="multipart/form-data" class="row g-3">
+                {% csrf_token %}
+        
+                    <!-- Left Column: CustomUser (User) Form -->
+                    <div class="col-md-8">
+                        {{ user_form.first_name.label_tag }}
+                        {{ user_form.first_name }}
+                        <br>
+        
+                        {{ user_form.last_name.label_tag }}
+                        {{ user_form.last_name }}
+                        <br>
+        
+                        {{ user_form.email.label_tag }}
+                        {{ user_form.email }}
+                        <br>
+        
+                        {{ user_form.user_type.label_tag }}
+                        {{ user_form.user_type }}
+                    </div>
+        
+                    <!-- Right Column: Jobseeker Profile Form (Skills) -->
+                    <div class="col-md-4">
+                        {{ form.skills.label_tag }}
+                    
+                        {{ form.skills }}
+                
+                    </div>
+        
+                    <!-- Common Fields: Profile Image and Resume -->
+                    <div class="col-md-12">
+                        {{ form.profile_image.label_tag }}
+                        {{ form.profile_image }}
+                    
+                    </div>
+                    <div class="col-md-12">
+                        {{ form.resume.label_tag }}
+                        {{ form.resume }}
+                    </div>
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <button type="submit" class="btn btn-danger">Cancel</button>
+                        <a href="{% url 'change_password' %}"  class="btn btn-warning">Change Password</a>
+                    </div>
+                    
+                </form>
+        </div>
+    </div>
+  </div>
+{% endblock content %}

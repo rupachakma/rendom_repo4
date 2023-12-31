@@ -1,0 +1,25 @@
+{% extends 'base.html' %}  <!-- Assuming you have a base template -->
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>{{ job.title }}</h2>
+        <p>{{ job.description }}</p>
+        <div class="skills-badges">Skills:
+            {% for skill in job.skill_set.all %}
+                <p class="badge bg-primary">{{ skill.title }}</p>
+            {% endfor %}
+        </div>
+        {% if user.is_authenticated and user.user_type == 'jobseeker' %}
+        
+            <a href="{% url 'job_apply' job_id=job.id %}" class="btn btn-primary" >Apply for the post</a>
+        
+        {% endif %}
+        <!-- Add more details as needed -->
+        <a href="{% url 'job_list' %}" class="btn btn-secondary">Back to Jobs</a>
+        {% if user.is_authenticated and user.user_type == 'recruiter' %}
+        <a href="{% url 'job_update' id=job.id %}" class="btn btn-primary">Update</a>
+        <a href="{% url 'delete_job' id=job.id %}" class="btn btn-danger">Delete</a>
+        {% endif %}
+    </div>
+{% endblock %}
+

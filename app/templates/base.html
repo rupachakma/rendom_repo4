@@ -6,10 +6,10 @@
     <title>Bootstrap demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   </head>
-  <body style="background-color: rgb(218, 219, 222);">
+  <body style="background-color: rgb(241, 241, 244);">
     <nav class="navbar navbar-expand-lg bg-success">
         <div class="container">
-          <a class="navbar-brand text-white" href="">Navbar</a>
+          <a class="navbar-brand text-white" href="{% url 'job_list' %}">JobPortal</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -20,13 +20,21 @@
               <li class="nav-item">
                 <a class="nav-link text-white" href="{% url 'logout' %}">Logout</a>
               </li>
-              {% if user.user_type == 'recruiter '%}
-              <li class="nav-item">
-                <a class="nav-link text-white" href="{% url 'profile' %}">Profile</a>
-              </li>
-              {% elif user.user_type == 'jobseeker '%}
+              
+              {% if user.user_type == 'recruiter'%}
               <li class="nav-item">
                 <a class="nav-link text-white" href="{% url 'recruiter_profile_view' %}">Profile</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'create_jobpost' %}">Create Job</a>
+              </li>
+              {% elif user.user_type == 'jobseeker'%}
+             
+              <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'jobseeker_profile_view' %}">Profile</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'user_applications' %}">Applied Job</a>
               </li>
               {% endif %}
               

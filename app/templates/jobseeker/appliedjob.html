@@ -1,0 +1,23 @@
+
+{% extends "../base.html" %}
+{% block content %}
+<div class="container p-5">
+    <h2 class="text-center">Your Job Applications</h2>
+    <hr>
+    {% if user_applications %}
+        <ul>
+            {% for application in user_applications %}
+                <li>
+                    Applied for: {{ application.job_post.title }}
+                    Applied on: {{ application.application_date }}
+                    
+                </li>
+                
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>You haven't applied to any job posts yet.</p>
+    {% endif %}
+    <a href="{% url 'job_list' %}" class="btn btn-dark mt-2">Back to joblist</a>
+</div>
+{% endblock content %}

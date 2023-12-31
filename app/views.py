@@ -1,8 +1,10 @@
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
-from django.contrib.auth import authenticate,login,logout
-from app.forms import Jobseeker_Profile_Update, LoginForm, Profile_Update_Form, Recruiter_Profile_Update, SignupForm
-from app.models import Jobseeker_Profile, Recruiter_Profile
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth import authenticate,login,logout,update_session_auth_hash
+from app.forms import ChangePasswordForm, JobApplicationForm, Jobseeker_Profile_Update, LoginForm, PostForm, Profile_Update_Form, Recruiter_Profile_Update, SignupForm
+from app.models import JobApplication, JobPost, Jobseeker_Profile, Recruiter_Profile, Skills
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 # Create your views here.
 def register(request):
@@ -25,7 +27,7 @@ def login_page(request):
             user = authenticate(username=username,password=password)
             if user is not None:
                 login(request,user)
-                return redirect('profile')
+                return redirect('job_list')
     else:
         form = LoginForm()
     return render(request,"login.html",{"form":form})
@@ -34,9 +36,9 @@ def profile_page(request):
     user = request.user
     if user.is_authenticated:
         if user.user_type == 'recruiter':
-            templates_name = 'profile.html'
+            templates_name = 'joblist.html'
         elif user.user_type == 'jobseeker':
-            templates_name = 'profile.html'
+            templates_name = 'joblist.html'
         else:
             return HttpResponse('Invalid User')
     else:
@@ -47,6 +49,7 @@ def logout_page(request):
     logout(request)
     return redirect('login')
 
+@login_required
 def recruiter_profile_update(request):
     user = request.user
 
@@ -61,11 +64,12 @@ def recruiter_profile_update(request):
             return redirect('recruiter_profile_view')
     else:
         user_form = Profile_Update_Form(instance=user)
-        form = Recruiter_Profile_Update(instance=recruiter_profile)
+        form = Recruiter_Profile_Update(instance=recruiter_profile)  # Correct the instance here
 
-    return render(request, 'profile_update.html', {'form': form,'user_form': user_form})
+    return render(request, 'recruiter/profile_update.html', {'form': form, 'user_form': user_form})
 
 
+@login_required
 def recruiter_profile_view(request):
     user = request.user
 
@@ -78,10 +82,10 @@ def recruiter_profile_view(request):
         'user': user,
         'user_profile': user_profile,
     }
+    
+    return render(request, 'recruiter/profile.html', context)
 
-    return render(request, 'profile.html', context)
-
-  
+@login_required 
 def jobseeker_profile_update(request):
     user = request.user
 
@@ -93,15 +97,15 @@ def jobseeker_profile_update(request):
         if form.is_valid() and user_form.is_valid():
             form.save()
             user_form.save()
-            return redirect('recruiter_profile_view')
+            return redirect('jobseeker_profile_view')
     else:
         user_form = Profile_Update_Form(instance=user)
         form = Jobseeker_Profile_Update(instance=jobseeker_profile)
 
-    return render(request, 'profile_update.html', {'form': form,'user_form': user_form})
+    return render(request, 'jobseeker/profile_update.html', {'form': form,'user_form': user_form})
 
-
-def recruiter_profile_view(request):
+@login_required
+def jobseeker_profile_view(request):
     user = request.user
 
     try:
@@ -114,5 +118,100 @@ def recruiter_profile_view(request):
         'user_profile': user_profile,
     }
 
-    return render(request, 'profile.html', context)
+    return render(request, 'jobseeker/profile.html', context)
   
+@login_required
+def create_jobpost(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST)
+        if form.is_valid():
+            jobpost = form.save(commit=False)
+            jobpost.recruiter = request.user 
+            jobpost.save()
+
+            selected_skill_ids = request.POST.getlist('skill_set')
+
+            selected_skills = Skills.objects.filter(id__in=selected_skill_ids)
+
+            jobpost.skill_set.set(selected_skills)
+
+            return redirect("job_list")
+    else:
+        form = PostForm()
+
+    return render(request, 'recruiter/create_jobpost.html', {'form': form})
+
+
+@login_required
+def job_list(request):
+    job = JobPost.objects.all()
+    return render(request,"joblist.html",{'job':job})
+
+@login_required
+def job_details(request,id):
+    job = get_object_or_404(JobPost, id=id)
+    return render(request,"jobdetails.html",{'job':job})
+
+@login_required
+def job_update(request,id):
+    jobpost = get_object_or_404(JobPost, id=id)
+
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=jobpost)
+        if form.is_valid():
+            jobpost = form.save(commit=False)
+
+            selected_skill_ids = request.POST.getlist('skill_set')
+            selected_skills = Skills.objects.filter(id__in=selected_skill_ids)
+            jobpost.skill_set.set(selected_skills)
+            jobpost.save()
+
+            return redirect("job_list")
+    else:
+        form = PostForm(instance=jobpost)
+
+    return render(request, 'recruiter/update_jobpost.html', {'form': form, 'jobpost': jobpost})
+
+
+@login_required
+def delete_job(request,id):
+    jobpost = get_object_or_404(JobPost,id=id)
+    jobpost.delete()
+    return redirect("job_list")
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = ChangePasswordForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important to maintain the user's session
+            messages.success(request, 'Password change successfully.')
+            return redirect("recruiter_profile_view")
+    else:
+        form = ChangePasswordForm(request.user)
+
+    return render(request, 'change_password.html', {'form': form})
+
+
+@login_required
+def job_apply(request, job_id):
+    job = JobPost.objects.get(pk=job_id)
+    application_form = JobApplicationForm()
+
+    if request.method == 'POST':
+        application_form = JobApplicationForm(request.POST, request.FILES)
+        if application_form.is_valid():
+            application = application_form.save(commit=False)
+            application.job_seeker = request.user
+            application.job_post = job
+            application.save()
+            return redirect('job_list')
+
+    return render(request, "jobseeker/applyjob.html", {'job': job, 'application_form': application_form})
+
+
+@login_required
+def user_applications(request):
+    user_applications = JobApplication.objects.filter(job_seeker=request.user)
+    return render(request, 'jobseeker/appliedjob.html', {'user_applications': user_applications})

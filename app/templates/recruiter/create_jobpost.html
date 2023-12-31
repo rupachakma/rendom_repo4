@@ -1,0 +1,45 @@
+{% extends "../base.html" %}
+{% block content %}
+<div class="container p-5">
+    <div class="mx-auto shadow bg-light">
+        <h2 class="alert alert-success text-center">Create Post</h2>
+        <div class="p-5">
+            <form action="" method="POST" class="row g-3">
+                {% csrf_token%}
+
+                <!-- Left Column -->
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        {{ form.title.label_tag }}
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.openings.label_tag }}
+                        {{ form.openings }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.category.label_tag }}
+                        {{ form.category }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label_tag }}
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-success">Save</button>
+                        <button class="btn btn-danger">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        {{ form.skill_set.label_tag }}
+                        {{ form.skill_set }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
