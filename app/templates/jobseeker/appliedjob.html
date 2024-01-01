@@ -8,8 +8,8 @@
         <ul>
             {% for application in user_applications %}
                 <li>
-                    Applied for: {{ application.job_post.title }}
-                    Applied on: {{ application.application_date }}
+                    <strong>Applied for</strong>: {{ application.job_post.title }}
+                    <strong>Applied on</strong>: {{ application.application_date }}
                     
                 </li>
                 

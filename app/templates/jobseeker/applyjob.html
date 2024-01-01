@@ -1,12 +1,31 @@
 {% extends "../base.html" %}
 {% block content %}
-<div class="container p-5">
-    <h2> {{ job.title }}</h2>
-    <hr>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ application_form.as_p }}
-        <button type="submit" class="btn btn-primary">Apply</button>
-    </form>
+
+<div class="container  p-5">
+    <div class=" mx-auto col-8 shadow bg-light">
+        <div class="p-3 text-center">
+            
+            <h3>Hello! {{user.first_name}} {{user.last_name}}</h3>
+           
+            <strong> You are going to apply for </strong>: {{ job.title }}
+            <hr>
+            {% if messages %}
+            <div class="alert alert-success" role="alert">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+            </div>
+            {% endif %}
+
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ application_form.as_p }}
+                <button type="submit" class="btn btn-primary">Apply</button>
+            </form>
+        </div>
+    </div>
 </div>
+
+
 {% endblock content %}

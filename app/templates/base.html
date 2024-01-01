@@ -28,6 +28,11 @@
               <li class="nav-item">
                 <a class="nav-link text-white" href="{% url 'create_jobpost' %}">Create Job</a>
               </li>
+             
+              <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'view_applicants' %}">View Application</a>
+              </li>
+             
               {% elif user.user_type == 'jobseeker'%}
              
               <li class="nav-item">

@@ -78,11 +78,14 @@ class PostForm(forms.ModelForm):
         }
 
 class ChangePasswordForm(PasswordChangeForm):
-    new_password1 = forms.CharField(label="New Password",widget=forms.PasswordInput(attrs={'class': 'form-control'})),
-    new_password2 = forms.CharField(label="Confirm New Password",widget=forms.PasswordInput(attrs={'class': 'form-control'})),
-    old_password = forms.CharField(label="Current Password",widget=forms.PasswordInput(attrs={'class': 'form-control'})),
+    old_password = forms.CharField(label="Current Password", widget=forms.PasswordInput(attrs={'class': 'form-control'}),)
+    new_password1 = forms.CharField(label="New Password",widget=forms.PasswordInput(attrs={'class': 'form-control'}),)
+    new_password2 = forms.CharField(label="Confirm New Password",widget=forms.PasswordInput(attrs={'class': 'form-control'}),)
+   
+
 
 class JobApplicationForm(forms.ModelForm):
     class Meta:
         model = JobApplication
         fields = ['resume']
+        labels = {'resume':'Upload Your Resume'}
