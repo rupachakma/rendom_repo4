@@ -89,3 +89,7 @@ class JobApplicationForm(forms.ModelForm):
         model = JobApplication
         fields = ['resume']
         labels = {'resume':'Upload Your Resume'}
+
+
+class SearchForm(forms.Form):
+    q = forms.CharField(label='Search', max_length=100)

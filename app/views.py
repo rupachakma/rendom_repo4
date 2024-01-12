@@ -1,13 +1,15 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import authenticate,login,logout,update_session_auth_hash
-from app.forms import ChangePasswordForm, JobApplicationForm, Jobseeker_Profile_Update, LoginForm, PostForm, Profile_Update_Form, Recruiter_Profile_Update, SignupForm
+from app.forms import ChangePasswordForm, JobApplicationForm, Jobseeker_Profile_Update, LoginForm, PostForm, Profile_Update_Form, Recruiter_Profile_Update, SearchForm, SignupForm
 from app.models import JobApplication, JobPost, Jobseeker_Profile, Recruiter_Profile, Skills
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 # Create your views here.
 def register(request):
+    if request.user.is_authenticated:
+        return redirect("job_list")
     if request.method == "POST":
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -19,6 +21,8 @@ def register(request):
 
 
 def login_page(request):
+    if request.user.is_authenticated:
+        return redirect("job_list")
     if request.method == "POST":
         form = LoginForm(request=request,data=request.POST)
         if form.is_valid():
@@ -32,14 +36,14 @@ def login_page(request):
         form = LoginForm()
     return render(request,"login.html",{"form":form})
 
-@login_required
+@login_required(login_url='login')
 def profile_page(request):
     user = request.user
     if user.is_authenticated:
         if user.user_type == 'recruiter':
-            templates_name = 'joblist.html'
+            templates_name = 'recruiter/profile.html'
         elif user.user_type == 'jobseeker':
-            templates_name = 'joblist.html'
+            templates_name = 'jobseeker/profile.html'
         else:
             return HttpResponse('Invalid User')
     else:
@@ -55,7 +59,7 @@ def logout_page(request):
 
 # Recruiter views
 
-@login_required
+@login_required(login_url='login')
 def recruiter_profile_update(request):
     user = request.user
 
@@ -75,7 +79,7 @@ def recruiter_profile_update(request):
     return render(request, 'recruiter/profile_update.html', {'form': form, 'user_form': user_form})
 
 
-@login_required
+@login_required(login_url='login')
 def create_jobpost(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
@@ -97,10 +101,13 @@ def create_jobpost(request):
     return render(request, 'recruiter/create_jobpost.html', {'form': form})
 
 
-@login_required
+@login_required(login_url='login')
 def job_update(request,id):
     jobpost = get_object_or_404(JobPost, id=id)
 
+    if request.user != jobpost.recruiter:
+        return HttpResponseForbidden("You don't have permission to update this job post.")
+    
     if request.method == 'POST':
         form = PostForm(request.POST, instance=jobpost)
         if form.is_valid():
@@ -118,14 +125,18 @@ def job_update(request,id):
     return render(request, 'recruiter/update_jobpost.html', {'form': form, 'jobpost': jobpost})
 
 
-@login_required
+@login_required(login_url='login')
 def delete_job(request,id):
     jobpost = get_object_or_404(JobPost,id=id)
+
+    if request.user != jobpost.recruiter:
+        return HttpResponseForbidden("You don't have permission to delete this job post.")
+    
     jobpost.delete()
     return redirect("job_list")
 
 
-@login_required
+@login_required(login_url='login')
 def recruiter_profile_view(request):
     user = request.user
 
@@ -143,24 +154,29 @@ def recruiter_profile_view(request):
 
 
 def view_applicants(request):
-    applications = JobApplication.objects.all()
+    # Get job posts created by the logged-in recruiter
+    recruiter_job_posts = JobPost.objects.filter(recruiter=request.user)
+
+    # Get applications for those job posts
+    applications = JobApplication.objects.filter(job_post__in=recruiter_job_posts)
+
     return render(request, 'recruiter/view_applicants.html', {'applications': applications})
 
 
 # views for jobseeker and recruiter
 
-@login_required
+@login_required(login_url='login')
 def job_list(request):
     job = JobPost.objects.all()
     return render(request,"joblist.html",{'job':job})
 
-@login_required
+@login_required(login_url='login')
 def job_details(request,id):
     job = get_object_or_404(JobPost, id=id)
     return render(request,"jobdetails.html",{'job':job})
 
 
-@login_required
+@login_required(login_url='login')
 def change_password(request):
     if request.method == 'POST':
         form = ChangePasswordForm(request.user, request.POST)
@@ -174,9 +190,23 @@ def change_password(request):
 
     return render(request, 'change_password.html', {'form': form})
 
+
+def search_results(request):
+    form = SearchForm(request.GET)
+    query = request.GET.get('q', '')
+
+    results = JobPost.objects.filter(title__icontains=query)
+
+    context = {
+        'form': form,
+        'results': results,
+    }
+
+    return render(request, 'search_results.html', context)
+
 #jobseeker views 
 
-@login_required 
+@login_required(login_url='login') 
 def jobseeker_profile_update(request):
     user = request.user
 
@@ -195,7 +225,7 @@ def jobseeker_profile_update(request):
 
     return render(request, 'jobseeker/profile_update.html', {'form': form,'user_form': user_form})
 
-@login_required
+@login_required(login_url='login')
 def jobseeker_profile_view(request):
     user = request.user
 
@@ -213,7 +243,7 @@ def jobseeker_profile_view(request):
 
 
 
-@login_required
+@login_required(login_url='login')
 def job_apply(request, job_id):
     job = JobPost.objects.get(pk=job_id)
     application_form = JobApplicationForm()
@@ -231,7 +261,22 @@ def job_apply(request, job_id):
     return render(request, "jobseeker/applyjob.html", {'job': job, 'application_form': application_form})
 
 
-@login_required
+@login_required(login_url='login')
 def user_applications(request):
     user_applications = JobApplication.objects.filter(job_seeker=request.user)
     return render(request, 'jobseeker/appliedjob.html', {'user_applications': user_applications})
+
+@login_required(login_url='login')
+def delete_application(request, application_id):
+    application = get_object_or_404(JobApplication, id=application_id)
+
+    # Check if the logged-in user is the owner of the application
+    if request.user != application.job_seeker:
+        # You might want to handle this differently, e.g., show an error message
+        return redirect('user_applications')
+
+    # Delete the application
+    application.delete()
+
+    # Redirect to the user_applications view
+    return redirect('user_applications')

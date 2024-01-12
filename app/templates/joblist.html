@@ -6,12 +6,13 @@
     <hr>
     {% for job in job %}
         <div class="col-lg-4 mb-4">
-            <div class="card border-0" style="background-color: #ebfafa;" >
+            <div class="card border-0 shadow" style="height: 340px;">
                 <div class="card-body">
                     <h4 class="card-title">{{ job.title }}</h4>
                     <hr>
                     <small>Published at: {{job.posted_at}}</small><br>
-                    <small class='text-muted'>by: {{job.recruiter.company_name}}</small>
+                    <small class='text-muted'>by: {{job.recruiter.recruiter_profile.company_name}}</small>
+                    <br>
                     
                     <span class="badge bg-secondary">{{job.category}}</span>
                     <p class="card-text mt-2">{{ job.description |truncatechars:50 }}</p>
@@ -19,7 +20,7 @@
                       
                     {% for skill in job.skill_set.all %}
                     <p class="badge bg-primary">{{ skill.title }}</p>
-                    {% endfor %}>
+                    {% endfor %}
                         
                     </div>
                     <a href="{% url 'job_details' id=job.id %}" class="btn btn-dark mt-2">View Details</a>
